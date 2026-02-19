@@ -26,7 +26,10 @@
 		FAN_MODE: 8,
 		PRESET_MODE: 16,
 		SWING_MODE: 32,
-		AUX_HEAT: 64
+		AUX_HEAT: 64,
+		TURN_OFF: 128,
+		TURN_ON: 256,
+		SWING_HORIZONTAL_MODE: 512
 	});
 
 	/**
@@ -50,7 +53,9 @@
 			target_temp_high: attributes?.target_temp_high
 		});
 	}
-
+	function handleTurnOnOff(action: 'turn_on' | 'turn_off') {
+		callService($connection, 'climate', action, { entity_id });
+	}
 	/**
 	 * Options
 	 */
@@ -100,6 +105,11 @@
 		id: option,
 		label: $lang(option),
 		icon: swingModeIcons?.[option] || 'mdi:fan'
+	}));
+	$: optionsSwingHorizontalModes = attributes?.swing_horizontal_modes?.map((option: string) => ({
+		id: option,
+		label: $lang(option),
+		icon: swingModeIcons?.[option] || 'mdi:arrow-left-right'
 	}));
 </script>
 
@@ -231,7 +241,57 @@
 				/>
 			{/if}
 		{/if}
+		{#if supports?.SWING_HORIZONTAL_MODE && attributes?.swing_horizontal_modes}
+			<h2>{$lang('swing_horizontal_mode')}</h2>
+			{#if attributes?.swing_horizontal_modes?.length <= MAX_ITEMS}
+				<div class="button-container">
+					{#each attributes?.swing_horizontal_modes as swingMode}
+						<button
+							on:click={() => handleClick('swing_horizontal_mode', swingMode)}
+							class:selected={attributes?.swing_horizontal_mode === swingMode}
+						>
+							{$lang(swingMode)}
+						</button>
+					{/each}
+				</div>
+			{:else}
+				<Select
+					options={optionsSwingHorizontalModes}
+					placeholder={$lang('swing_horizontal_mode')}
+					value={attributes?.swing_horizontal_mode}
+					on:change={(event) => {
+						if (event?.detail === null) return;
+						handleClick('swing_horizontal_mode', event?.detail);
+					}}
+				/>
+			{/if}
+		{/if}
 
+		{#if (supports?.TURN_ON || supports?.TURN_OFF) && !attributes?.hvac_modes?.includes('off')}
+			<h2>{$lang('power')}</h2>
+			<div class="button-container">
+				{#if supports?.TURN_ON}
+					<button
+						on:click={() => handleTurnOnOff('turn_on')}
+						class:selected={entity?.state !== 'off'}
+					>
+						<div class="icon">
+							<Icon icon="mdi:power-on" height="none" />
+						</div>
+					</button>
+				{/if}
+				{#if supports?.TURN_OFF}
+					<button
+						on:click={() => handleTurnOnOff('turn_off')}
+						class:selected={entity?.state === 'off'}
+					>
+						<div class="icon">
+							<Icon icon="mdi:power-off" height="none" />
+						</div>
+					</button>
+				{/if}
+			</div>
+		{/if}
 		<ConfigButtons />
 	</Modal>
 {/if}

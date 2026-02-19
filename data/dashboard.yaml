@@ -1,7 +1,7 @@
-theme: godis
+theme: muted
 hide_views: false
 hide_sidebar: false
-sidebarWidth: 391
+sidebarWidth: 308
 views:
   - name: Hemma
     id: 6467602449648
@@ -13,24 +13,27 @@ views:
             id: 2171067078835
             items:
               - type: button
-                entity_id: light.studio_dator
+                entity_id: climate.riscaldamento_bagno
                 id: 5008685947164
               - type: button
-                entity_id: light.vardagsrum
+                entity_id: climate.air_conditioner
                 id: 6094154428386
-                name: Belysning
+                name: Clima
               - type: button
-                entity_id: light.vardagsrum_horna
+                entity_id: alarm_control_panel.allarme_casa
                 color: '#1cd760'
                 marquee: true
                 id: 4795962599238
                 name: Hörnlampa
               - type: button
-                entity_id: media_player.sony_bravia_tv
+                entity_id: automation.soundbar_cambia_modalita
                 id: 7351468287678
               - type: button
                 id: 3728122340522
-                entity_id: switch.deltaco_sh_p01_socket
+                entity_id: light.comodino_amedeo_2
+              - id: 418221005800
+                type: button
+                entity_id: vacuum.pasquale
           - name: Studio
             id: 9828119797472
             items:
@@ -50,18 +53,17 @@ views:
           - name: Media
             id: 7859955675791
             items:
-              - type: media
-                id: 5276106620601
-                conditional:
-                  - entity_id: sensor.plex_recently_added
-                    name: Senast tillagt
-                    icon: mdi:plex
-                    color: orange
-                  - entity_id: media_player.vardagsrum
-                  - entity_id: media_player.sovrum
-                  - entity_id: media_player.spotify
-                    icon: mdi:spotify
-                  - entity_id: media_player.kok
+              - id: 645896272577
+                type: conditional_media
+                entity_id: media_player.tv_samsung_q60_series_55_2
+                media_players:
+                  - entity_id: media_player.amedeodi_fire_tv_stick
+                  - entity_id: media_player.chromecast
+                marquee: true
+              - id: 2685473197940
+                type: button
+                entity_id: media_player.tv_samsung_q60_series_55_2
+                marquee: true
           - name: Övrigt
             items:
               - type: button
@@ -84,7 +86,7 @@ views:
                 entity_id: light.sovrum_group
                 id: 4536918822520
               - type: button
-                entity_id: climate.ac
+                entity_id: climate.air_conditioner
                 marquee: true
                 id: 2763550457343
                 name: Klimat

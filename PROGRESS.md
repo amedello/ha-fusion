@@ -59,7 +59,7 @@ List grouped by domains and categorized based on their similar behaviors
   - [x] support different modes other than mode: slider
 - [x] light
   - [x] open rgb issue <https://github.com/matt8707/ha-fusion/issues/18>
-- [ ] media_player
+- [x] media_player
 - [x] input_select
   - [x] <https://github.com/matt8707/ha-fusion/issues/4>
 - [x] select
@@ -70,7 +70,7 @@ List grouped by domains and categorized based on their similar behaviors
 - [x] todo
   - [x] modal has a shopping_list functionality
 - [x] vacuum
-  - [ ] idea: custom map if map camera
+  - [x] idea: custom map if map camera
   - [x] <https://github.com/matt8707/ha-fusion/issues/24>
 - [x] counter
 - [x] group
@@ -109,7 +109,7 @@ List grouped by domains and categorized based on their similar behaviors
 - [ ] map
 - [ ] media
   - [ ] <https://github.com/matt8707/ha-fusion/issues/20>
-- [ ] light slider
+- [x] light slider
   - [ ] <https://github.com/matt8707/ha-fusion/issues/40>
 
 ## List of domains (incomplete)

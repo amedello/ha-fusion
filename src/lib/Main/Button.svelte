@@ -25,6 +25,7 @@
 	import { openModal } from 'svelte-modals';
 	import Ripple from 'svelte-ripple';
 	import parser from 'js-yaml';
+	import '$lib/Main/Button.css';
 
 	export let demo: string | undefined = undefined;
 	export let sel: any;
@@ -46,6 +47,17 @@
 
 	/** display loader if no state change has occurred within `$motion`ms */
 	let delayLoading: ReturnType<typeof setTimeout> | null;
+
+	// Light drag slider
+	let isDragging = false;
+	let wasDragging = false;
+	let pointerIsDown = false;
+	let dragStartX = 0;
+	let dragBrightness = 0;
+	let showDragOverlay = false;
+	$: isLight = getDomain(sel?.entity_id) === 'light';
+	$: lightBrightness = entity?.attributes?.brightness ?? 0;
+	$: dragOverlayColor = `color-mix(in srgb, ${iconColor} 60%, transparent)`;
 
 	/**
 	 * Observes changes in the `last_updated` property of an entity.
@@ -327,7 +339,7 @@
 
 				case 'media_player':
 					openModal(() => import('$lib/Modal/MediaPlayer.svelte'), {
-						selected: sel
+						sel
 					});
 					break;
 
@@ -392,6 +404,64 @@
 		}
 	}
 
+	/**
+	 * Light drag slider — pointerdown
+	 * Unifica handlePointer e drag start
+	 */
+	function handlePointerDown(event: MouseEvent) {
+		handlePointer();
+		const e = event as unknown as PointerEvent;
+		if (!isLight || $editMode || entity?.state !== 'on') return;
+		pointerIsDown = true;
+		dragStartX = e.clientX;
+		dragBrightness = lightBrightness;
+	}
+
+	/**
+	 * Light drag slider — pointermove
+	 * Attiva la modalità drag dopo 8px di spostamento
+	 */
+	function handleDragMove(event: MouseEvent) {
+		if (!pointerIsDown || !isLight || $editMode || entity?.state !== 'on') return;
+		const e = event as unknown as PointerEvent;
+		const deltaX = e.clientX - dragStartX;
+		if (!isDragging && Math.abs(deltaX) > 15) {
+			isDragging = true;
+			showDragOverlay = true;
+		}
+		if (isDragging) {
+			const rect = container.getBoundingClientRect();
+			const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+			dragBrightness = Math.round(pct * 255);
+		}
+	}
+
+	/**
+	 * Light drag slider — pointerup
+	 * Se era drag, aggiorna brightness. Altrimenti lascia passare il click.
+	 */
+	function handleDragEnd(event: MouseEvent) {
+		if (!isLight || $editMode) return;
+		if (isDragging) {
+			callService($connection, 'light', 'turn_on', {
+				entity_id: entity?.entity_id,
+				brightness: dragBrightness
+			});
+			wasDragging = true;
+			event.stopPropagation();
+		}
+		pointerIsDown = false;
+		isDragging = false;
+		showDragOverlay = false;
+	}
+
+	function handleDragCancel() {
+		pointerIsDown = false;
+		isDragging = false;
+		wasDragging = false;
+		showDragOverlay = false;
+	}
+
 	////// templates //////
 
 	$: if ($config?.state === 'RUNNING' && sel?.template) {
@@ -453,9 +523,13 @@
 	data-state={stateOn}
 	tabindex="-1"
 	style={!$editMode ? 'cursor: pointer;' : ''}
+	style:touch-action={isLight && !$editMode && entity?.state === 'on' ? 'none' : 'auto'}
 	style:min-height="{$itemHeight}px"
 	on:pointerenter={handlePointer}
-	on:pointerdown={handlePointer}
+	on:pointerdown={handlePointerDown}
+	on:pointermove={handleDragMove}
+	on:pointerup={handleDragEnd}
+	on:pointercancel={handleDragCancel}
 	use:Ripple={{
 		...$ripple,
 		color: !$editMode
@@ -465,11 +539,24 @@
 			: 'rgba(0, 0, 0, 0)'
 	}}
 >
+	<!-- DRAG OVERLAY (solo per luci) -->
+	{#if showDragOverlay}
+		<div
+			class="drag-overlay"
+			style="width: {Math.round(dragBrightness / 2.55)}%; --drag-overlay-color: {dragOverlayColor}"
+		/>
+	{/if}
+
 	<!-- ICON -->
 
 	<div
 		class="left"
 		on:click|stopPropagation={(event) => {
+			if (wasDragging) {
+				wasDragging = false;
+				return;
+			}
+			if (isDragging) return;
 			if (!$editMode) {
 				toggle();
 			} else {
@@ -517,7 +604,19 @@
 		</div>
 	</div>
 
-	<div class="right" on:click|stopPropagation={handleEvent} on:keydown role="button" tabindex="0">
+	<div
+		class="right"
+		on:click|stopPropagation={(e) => {
+			if (wasDragging) {
+				wasDragging = false;
+				return;
+			}
+			if (!isDragging) handleEvent(e);
+		}}
+		on:keydown
+		role="button"
+		tabindex="0"
+	>
 		<!-- NAME -->
 		<div class="name" data-state={stateOn}>
 			{@html (sel?.template?.name && template?.name?.output) ||

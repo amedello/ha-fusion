@@ -25,7 +25,7 @@
 
 	const minTemp = stateObj?.attributes?.min_temp;
 	const maxTemp = stateObj?.attributes?.max_temp;
-	if (minTemp && maxTemp) {
+	if (minTemp !== undefined && maxTemp !== undefined) {
 		for (let i = maxTemp; i >= minTemp; i--) {
 			temperatures.push(i);
 		}
@@ -54,7 +54,7 @@
 			let temperature = Math.round(stateObj?.attributes?.temperature);
 
 			// but don't round below or over minmax temp
-			if (minTemp && maxTemp) {
+			if (minTemp !== undefined && maxTemp !== undefined) {
 				temperature = Math.max(minTemp, Math.min(maxTemp, temperature));
 			}
 
