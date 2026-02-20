@@ -11,6 +11,6 @@ vite.config.ts.timestamp-*
 .vscode
 src/routes/playground
 src/lib/Playground
-/data/configuration.yaml
+data/configuration.yaml
 /data/youtube_credentials.json
 /data/version.json
