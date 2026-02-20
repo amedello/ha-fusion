@@ -10,9 +10,7 @@ This is a personal fork of [ha-fusion](https://github.com/matt8707/ha-fusion) by
 
 ## What's different in this fork
 
-- **MediaPlayer modal** — transport controls, volume, seek, shuffle/repeat, source selection
-- **Vacuum modal** — live map, shortcuts, Dreame-specific controls (cleaning mode, suction level, mop humidity)
-- **Light drag slider** — drag horizontally on a light button to adjust brightness without opening the modal
+- **FOR NOW BUGFIX AND LITTLE IMPLEMENTATION**
 
 ---
 
