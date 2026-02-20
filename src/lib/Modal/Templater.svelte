@@ -21,7 +21,6 @@
 	import { slide } from 'svelte/transition';
 	import Select from '$lib/Components/Select.svelte';
 	import parser from 'js-yaml';
-	import { subscribeServices } from 'home-assistant-js-websocket';
 
 	export let isOpen: boolean;
 	export let sel: ButtonItem;
@@ -51,16 +50,6 @@
 				service = undefined;
 			}
 		}
-
-		/**
-		 * Get services
-		 */
-		if (!$services) {
-			subscribeServices($connection, (hassServices) => {
-				services.set(hassServices);
-			});
-		}
-
 		/**
 		 * Get service icons and
 		 * generate dropdown data

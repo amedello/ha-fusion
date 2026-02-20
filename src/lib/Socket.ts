@@ -4,14 +4,24 @@ import {
 	createConnection,
 	subscribeConfig,
 	subscribeEntities,
+	subscribeServices,
 	ERR_CANNOT_CONNECT,
 	ERR_INVALID_AUTH,
 	ERR_CONNECTION_LOST,
 	ERR_HASS_HOST_REQUIRED,
-	ERR_INVALID_HTTPS_TO_HTTP
+	ERR_INVALID_HTTPS_TO_HTTP,
+	ERR_INVALID_AUTH_CALLBACK
 } from 'home-assistant-js-websocket';
 import type { Auth, AuthData } from 'home-assistant-js-websocket';
-import { states, connection, config, connected, event, persistentNotifications } from '$lib/Stores';
+import {
+	states,
+	connection,
+	config,
+	connected,
+	event,
+	persistentNotifications,
+	services
+} from '$lib/Stores';
 import { openModal, closeModal } from 'svelte-modals';
 import type { Configuration, PersistentNotification } from '$lib/Types';
 
@@ -19,7 +29,13 @@ const options = {
 	hassUrl: undefined as string | undefined,
 	async loadTokens() {
 		try {
-			return JSON.parse(localStorage.hassTokens);
+			const raw = localStorage.hassTokens;
+			// guard against literal "null" string written by old clearTokens()
+			if (!raw || raw === 'null' || raw === 'undefined') return undefined;
+			const tokens = JSON.parse(raw);
+			// validate token structure before returning
+			if (!tokens?.access_token && !tokens?.refresh_token) return undefined;
+			return tokens;
 		} catch {
 			return undefined;
 		}
@@ -28,7 +44,7 @@ const options = {
 		localStorage.hassTokens = JSON.stringify(tokens);
 	},
 	clearTokens() {
-		localStorage.hassTokens = null;
+		localStorage.removeItem('hassTokens');
 	}
 };
 
@@ -54,7 +70,7 @@ export async function authentication(configuration: Configuration) {
 			// default auth flow
 		} else {
 			auth = await getAuth({ ...options, hassUrl: configuration?.hassUrl });
-			if (auth.expired) auth.refreshAccessToken();
+			if (auth.expired) await auth.refreshAccessToken();
 		}
 
 		// connection
@@ -69,6 +85,12 @@ export async function authentication(configuration: Configuration) {
 		// config
 		subscribeConfig(conn, (hassConfig) => {
 			config.set(hassConfig);
+		});
+
+		// services — subscribe globally at connection time so all components
+		// have immediate access without needing to re-subscribe individually
+		subscribeServices(conn, (hassServices) => {
+			services.set(hassServices);
 		});
 
 		// events
@@ -160,6 +182,15 @@ function handleError(_error: unknown) {
 		case ERR_INVALID_AUTH:
 			console.error('ERR_INVALID_AUTH');
 			options.clearTokens();
+			break;
+		case ERR_INVALID_AUTH_CALLBACK:
+			// raised by getAuth() when limitHassInstance is true and the
+			// client ID or hassURL in the auth callback state don't match
+			console.error('ERR_INVALID_AUTH_CALLBACK');
+			options.clearTokens();
+			if (location.search.includes('auth_callback=1')) {
+				history.replaceState(null, '', location.pathname);
+			}
 			break;
 		case ERR_CANNOT_CONNECT:
 			console.error('ERR_CANNOT_CONNECT');

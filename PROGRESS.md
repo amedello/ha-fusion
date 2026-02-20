@@ -47,6 +47,10 @@ List grouped by domains and categorized based on their similar behaviors
 
 - [x] alarm_control_panel
   - [x] <https://github.com/matt8707/ha-fusion/issues/3>
+  - [x] respect `code_format` (null / number / text)
+  - [x] respect `code_arm_required` and `code_disarm_required`
+  - [x] filter modes by `supported_features` bitmask
+  - [x] fix <https://github.com/matt8707/ha-fusion/issues/628>
 - [x] lock
   - [ ] option to lock with code?
 - [x] camera
@@ -116,3 +120,23 @@ List grouped by domains and categorized based on their similar behaviors
 
 <https://www.home-assistant.io/integrations/demo/> <br>
 <https://github.com/home-assistant/core/blob/dev/homeassistant/const.py>
+
+---
+
+## Fork fixes (amedello/ha-fusion)
+
+### HA 2025.x compatibility
+
+- [x] Socket.ts: token validation and auth robustness
+  - `loadTokens()` handles literal `"null"` string and validates token structure
+  - `clearTokens()` uses `localStorage.removeItem()` instead of writing null
+  - added missing `await` on `auth.refreshAccessToken()`
+  - `subscribeServices()` moved to global connection level
+  - added `ERR_INVALID_AUTH_CALLBACK` handling and `auth_callback=1` URL cleanup
+  - fix <https://github.com/matt8707/ha-fusion/issues/632>
+
+### Pending
+
+- [ ] YouTube integration — youtubei.js v10 → v16 migration
+      fix <https://github.com/matt8707/ha-fusion/issues/623>
+- [ ] External auth (#636) — authentication issues outside local network

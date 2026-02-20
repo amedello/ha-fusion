@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { connection, services, states } from '$lib/Stores';
 	import { callService, subscribeServices } from 'home-assistant-js-websocket';
-	import { onMount } from 'svelte';
 	import type { ShapeConfig } from 'konva/lib/Shape';
 	import { KonvaEditor } from '$lib/Modal/PictureElements/konvaEditor';
 	import Icon from '@iconify/svelte';
@@ -40,14 +39,6 @@
 			Object.keys(domainServices).map((service) => `${domain}.${service}`)
 		)
 		.sort((a, b) => a.localeCompare(b));
-
-	onMount(async () => {
-		if ($connection && !$services) {
-			subscribeServices($connection, (data) => {
-				$services = data;
-			});
-		}
-	});
 
 	function handleChange(event: Event) {
 		const target = event.target as HTMLInputElement;
