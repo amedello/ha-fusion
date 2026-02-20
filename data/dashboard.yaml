@@ -12,6 +12,11 @@ views:
           - name: Test
             id: 2171067078835
             items:
+              - id: 3124550314770
+                type: conditional_media
+                entity_id: media_player.tv_samsung_q60_series_55
+                media_players:
+                  - entity_id: ''
               - type: button
                 entity_id: light.studio_dator
                 id: 5008685947164

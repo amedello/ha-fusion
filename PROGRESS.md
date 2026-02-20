@@ -135,8 +135,13 @@ List grouped by domains and categorized based on their similar behaviors
   - added `ERR_INVALID_AUTH_CALLBACK` handling and `auth_callback=1` URL cleanup
   - fix <https://github.com/matt8707/ha-fusion/issues/632>
 
+### YouTube add-on
+
+- [x] Extended YouTube thumbnail support to Chromecast / Google TV (`app_id: 2C6A6E3D`)
+  - previously only supported iOS (`com.google.ios.youtube`)
+- [x] Upgraded `youtubei.js` to v16 — OAuth2 now uses TV client (required by Google)
+  - fixes `Failed to refresh access token: 400` error
+
 ### Pending
 
-- [ ] YouTube integration — youtubei.js v10 → v16 migration
-      fix <https://github.com/matt8707/ha-fusion/issues/623>
 - [ ] External auth (#636) — authentication issues outside local network

@@ -61,7 +61,7 @@
 	$: active = currentState === 'playing' || (currentState === 'paused' && !pauseExpired);
 
 	// set background image
-	$: if ($youtubeAddon && app_id === 'com.google.ios.youtube' && active) {
+	$: if ($youtubeAddon && (app_id === 'com.google.ios.youtube' || app_id === '2C6A6E3D') && active) {
 		youtubeThumbnail(media_artist, media_title);
 	} else if (entity_picture && active) {
 		entityPicture();
