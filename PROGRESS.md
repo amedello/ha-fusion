@@ -142,6 +142,14 @@ List grouped by domains and categorized based on their similar behaviors
 - [x] Upgraded `youtubei.js` to v16 — OAuth2 now uses TV client (required by Google)
   - fixes `Failed to refresh access token: 400` error
 
+### Ingress / External auth
+
+- [x] Fix auth redirect URL when using HA Addon Ingress (#636)
+  - detects Ingress path (`/api/hassio_ingress/`) and passes explicit `redirectUrl` to `getAuth()`
+  - prevents OAuth2 callback failure when accessing ha-fusion externally via Ingress
+  - no impact on Docker / direct port installs
+
 ### Pending
 
-- [ ] External auth (#636) — authentication issues outside local network
+- [ ] Lock with code support
+- [ ] `input_datetime` parse date in state
