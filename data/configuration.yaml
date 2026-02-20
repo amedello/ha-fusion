@@ -1,8 +1,0 @@
-locale: it
-token: >-
-  eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiI5MDlmZTY4YWIxZWY0ZWYyOGQ5MDg5ZTgzNGFkZDhlNCIsImlhdCI6MTcyNDA2NjE5MywiZXhwIjoyMDM5NDI2MTkzfQ.v6fv6v2v_ode3x5XfohkB8-nwHKzwg0hDTJh5YoXBok
-addons:
-  youtube: true
-  maptiler:
-    apikey: kMmvrI2r2DUoOKNTIHJy
-custom_js: true
