@@ -67,10 +67,19 @@ export async function authentication(configuration: Configuration) {
 			openModal(() => import('$lib/Components/TokenModal.svelte'));
 			return;
 
-			// default auth flow
+		// default auth flow
 		} else {
-			auth = await getAuth({ ...options, hassUrl: configuration?.hassUrl });
-			if (auth.expired) await auth.refreshAccessToken();
+			const isIngress = window.location.pathname.includes('/api/hassio_ingress/');
+			const redirectUrl = isIngress
+					? `${window.location.origin}/?auth_callback=1`
+					: undefined;
+
+			auth = await getAuth({
+					...options,
+					hassUrl: configuration?.hassUrl,
+					...(redirectUrl && { redirectUrl })
+			});
+			if (auth.expired) auth.refreshAccessToken();
 		}
 
 		// connection
