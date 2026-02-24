@@ -259,6 +259,9 @@
 		overflow-y: auto;
 	}
 
+	.contents.large {
+    overflow-y: visible;
+	}
 	button {
 		width: 1.85rem;
 		background: none;

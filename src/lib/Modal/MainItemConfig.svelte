@@ -88,6 +88,15 @@
 			}
 		},
 		{
+			id: 'custom_panel',
+			type: 'Custom Panel',
+			component: Button,
+			props: {
+					demo: $demo.sensor,
+					sel
+			}
+		},
+		{
 			id: 'camera',
 			type: $lang('camera'),
 			component: Camera,
@@ -164,7 +173,9 @@
 
 				break;
 			}
-
+			case 'custom_panel':
+    		openModal(() => import('$lib/Modal/CustomPanelConfig.svelte'), { sel });
+    	break;
 			case 'empty':
 				openModal(() => import('$lib/Modal/EmptyConfig.svelte'), { sel });
 				break;
