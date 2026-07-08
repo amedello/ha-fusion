@@ -34,37 +34,23 @@
 		currentStates: typeof $states
 	): GroupResult[] {
 		return groups.map((group) => {
-			let active: any[];
-
-			// Entity-based matching: if entities is specified, use it directly
-			if (group.entities && group.entities.length > 0) {
-				const entityIds = new Set(group.entities.map((e: PowerSummaryEntity) => e.entity_id));
-				active = Object.entries(currentStates ?? {})
-					.filter(([id, entity]) => {
-						if (!entityIds.has(id)) return false;
-						const entry = group.entities!.find((e: PowerSummaryEntity) => e.entity_id === id);
-						const onState = entry?.on_state ?? 'on';
-						return entity.state === onState;
-					})
-					.map(([, entity]) => entity);
-			} else {
-				// Legacy domain-based matching
-				const domains = group.domains ?? [];
-				const excluded = new Set(group.exclude ?? []);
-				const onStates = new Set(group.on_states ?? ['on']);
-
-				active = Object.entries(currentStates ?? {})
-					.filter(([id, entity]) => {
-						const domain = id.split('.')[0];
-						return domains.includes(domain) && !excluded.has(id) && onStates.has(entity.state);
-					})
-					.map(([, entity]) => entity);
-			}
+			// Entity-based matching: count entities whose state matches their on_state
+			const entries = group.entities ?? [];
+			const entityMap = new Map(entries.map((e: PowerSummaryEntity) => [e.entity_id, e]));
+			const active = Object.entries(currentStates ?? {})
+				.filter(([id, entity]) => {
+					const entry = entityMap.get(id);
+					if (!entry) return false;
+					const onState = entry.on_state ?? 'on';
+					return entity.state === onState;
+				})
+				.map(([, entity]) => entity);
 
 			const count = active.length;
 			let displayText = '';
 			if (count === 1) {
-				displayText = getName(undefined, active[0]) ?? active[0].entity_id.split('.')[1];
+				const entry = entityMap.get(active[0].entity_id);
+				displayText = entry?.name || getName(undefined, active[0]) || active[0].entity_id.split('.')[1];
 			}
 
 			return { group, count, displayText };

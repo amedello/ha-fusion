@@ -22,9 +22,7 @@
 
 	let expandedIndex: number | null = sel.groups.length === 0 ? null : 0;
 
-	const DOMAINS = ['light', 'switch', 'climate', 'media_player', 'sensor', 'input_boolean', 'fan'];
-	const ON_STATES = ['on', 'playing', 'heat', 'cool', 'fan_only', 'dry', 'auto', 'idle', 'paused'];
-
+	
 	function save() {
 		$dashboard = $dashboard;
 	}
@@ -53,9 +51,7 @@
 			id: generateId($dashboard),
 			label: '',
 			icon: 'mdi:circle',
-			domains: [],
-			on_states: ['on'],
-			exclude: []
+			entities: []
 		};
 		sel.groups = [...(sel.groups ?? []), newGroup];
 		expandedIndex = sel.groups.length - 1;
@@ -68,43 +64,6 @@
 			expandedIndex = (sel.groups?.length ?? 1) - 1;
 		}
 		save();
-	}
-
-	function toggleDomain(index: number, domain: string) {
-		if (!sel.groups) return;
-		const group = sel.groups[index];
-		const current = group.domains ?? [];
-		const next = current.includes(domain)
-			? current.filter((d) => d !== domain)
-			: [...current, domain];
-		setGroup(index, 'domains', next);
-	}
-
-	function toggleOnState(index: number, state: string) {
-		if (!sel.groups) return;
-		const group = sel.groups[index];
-		const current = group.on_states ?? [];
-		const next = current.includes(state) ? current.filter((s) => s !== state) : [...current, state];
-		setGroup(index, 'on_states', next);
-	}
-
-	function addExclude(index: number, entityId: string) {
-		if (!sel.groups || !entityId) return;
-		const group = sel.groups[index];
-		const current = group.exclude ?? [];
-		if (!current.includes(entityId)) {
-			setGroup(index, 'exclude', [...current, entityId]);
-		}
-	}
-
-	function removeExclude(index: number, entityId: string) {
-		if (!sel.groups) return;
-		const group = sel.groups[index];
-		setGroup(
-			index,
-			'exclude',
-			(group.exclude ?? []).filter((id) => id !== entityId)
-		);
 	}
 
 	function getAllEntityOptions() {
@@ -157,19 +116,13 @@
 		setGroup(index, 'entities', updated);
 	}
 
-	function getExcludeOptions(group: PowerSummaryGroup) {
-		const domains = group.domains ?? [];
-		return Object.keys($states)
-			.filter((id) => {
-				const domain = id.split('.')[0];
-				return domains.includes(domain);
-			})
-			.sort()
-			.map((id) => ({
-				id,
-				label: $states[id]?.attributes?.friendly_name ?? id,
-				hint: id
-			}));
+	function setEntityName(index: number, entityId: string, name: string) {
+		if (!sel.groups) return;
+		const group = sel.groups[index];
+		const updated = (group.entities ?? []).map((e) =>
+			e.entity_id === entityId ? { ...e, name } : e
+		);
+		setGroup(index, 'entities', updated);
 	}
 
 	function handleDndConsider(event: CustomEvent) {
@@ -272,62 +225,6 @@
 									</button>
 								</div>
 
-								<h2>{$lang('domains')}</h2>
-								<div class="chips">
-									{#each DOMAINS as domain}
-										<button
-											class="chip"
-											class:selected={(group.domains ?? []).includes(domain)}
-											on:click={() => toggleDomain(i, domain)}
-											use:Ripple={$ripple}
-										>
-											{$lang(domain) || domain}
-										</button>
-									{/each}
-								</div>
-
-								<h2>{$lang('on_states')}</h2>
-								<div class="chips">
-									{#each ON_STATES as state}
-										<button
-											class="chip"
-											class:selected={(group.on_states ?? []).includes(state)}
-											on:click={() => toggleOnState(i, state)}
-											use:Ripple={$ripple}
-										>
-											{$lang(state) || state}
-										</button>
-									{/each}
-								</div>
-
-								<h2>{$lang('exclude')}</h2>
-								{#if (group.domains ?? []).length > 0}
-									<Select
-										options={getExcludeOptions(group)}
-										placeholder={$lang('exclude')}
-										value={undefined}
-										on:change={(e) => addExclude(i, e.detail)}
-									/>
-									{#if (group.exclude ?? []).length > 0}
-										<div class="exclude-tags">
-											{#each group.exclude ?? [] as entityId}
-												<span class="tag">
-													{$states[entityId]?.attributes?.friendly_name ?? entityId}
-													<button
-														class="tag-remove"
-														on:click={() => removeExclude(i, entityId)}
-														aria-label="Remove {entityId}"
-													>
-														<Icon icon="mdi:close" height="0.8em" width="0.8em" />
-													</button>
-												</span>
-											{/each}
-										</div>
-									{/if}
-								{:else}
-									<p class="hint">{$lang('select_domains_first')}</p>
-								{/if}
-
 								<h2>{$lang('entities')}</h2>
 								<Select
 									options={getEntityOptionsForGroup(i)}
@@ -340,25 +237,50 @@
 										{#each group.entities ?? [] as entry}
 											<div class="entity-tag">
 												<div class="entity-tag-body">
-													<span class="entity-name">
-														{$states[entry.entity_id]?.attributes?.friendly_name ?? entry.entity_id}
-													</span>
-													<InputClear
-														condition={entry.on_state}
-														on:clear={() => setEntityOnState(i, entry.entity_id, 'on')}
-														let:padding
-													>
-														<input
-															class="on-state-input"
-															type="text"
-															value={entry.on_state ?? 'on'}
-															placeholder="on"
-															on:change={(e) => setEntityOnState(i, entry.entity_id, e.currentTarget.value)}
-															style:padding
-															autocomplete="off"
-															spellcheck="false"
-														/>
-													</InputClear>
+													<div class="entity-fields">
+														<div class="entity-name-row">
+															<span class="entity-id" title={entry.entity_id}>
+																{entry.entity_id.split('.')[1]}
+															</span>
+															<InputClear
+																condition={entry.name}
+																on:clear={() => setEntityName(i, entry.entity_id, '')}
+																let:padding
+															>
+																<input
+																	class="name-input"
+																	type="text"
+																	value={entry.name ?? ''}
+																	placeholder="{$states[entry.entity_id]?.attributes?.friendly_name ?? '...'}"
+																	on:change={(e) => setEntityName(i, entry.entity_id, e.currentTarget.value)}
+																	on:blur={() => save()}
+																	style:padding
+																	autocomplete="off"
+																	spellcheck="false"
+																/>
+															</InputClear>
+														</div>
+														<div class="entity-state-row">
+															<span class="on-label">{$lang('on_states')}</span>
+															<InputClear
+																condition={entry.on_state}
+																on:clear={() => setEntityOnState(i, entry.entity_id, 'on')}
+																let:padding
+															>
+																<input
+																	class="on-state-input"
+																	type="text"
+																	value={entry.on_state ?? 'on'}
+																	placeholder="on"
+																	on:change={(e) => setEntityOnState(i, entry.entity_id, e.currentTarget.value)}
+																	on:blur={() => save()}
+																	style:padding
+																	autocomplete="off"
+																	spellcheck="false"
+																/>
+															</InputClear>
+														</div>
+													</div>
 												</div>
 												<button
 													class="entity-remove"
@@ -370,7 +292,9 @@
 											</div>
 										{/each}
 									</div>
-									<p class="hint">{$lang('entities')}: {$lang('priority_over_domains')}</p>
+								{/if}
+								{#if !(group.entities ?? []).length}
+									<p class="hint">{$lang('add')} {$lang('entity')}</p>
 								{/if}
 							</div>
 						{/if}
@@ -480,61 +404,6 @@
 		gap: 0.5rem;
 	}
 
-	.chips {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.35rem;
-	}
-
-	.chip {
-		background: rgba(255, 255, 255, 0.08);
-		border: 1px solid rgba(255, 255, 255, 0.12);
-		border-radius: 999px;
-		padding: 0.2rem 0.65rem;
-		font-size: 0.8rem;
-		color: inherit;
-		font-family: inherit;
-		cursor: pointer;
-		transition: background 0.15s;
-	}
-
-	.chip.selected {
-		background: rgba(255, 255, 255, 0.22);
-		border-color: rgba(255, 255, 255, 0.35);
-	}
-
-	.exclude-tags {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.35rem;
-		margin-top: 0.4rem;
-	}
-
-	.tag {
-		display: flex;
-		align-items: center;
-		gap: 0.3rem;
-		background: rgba(255, 255, 255, 0.1);
-		border-radius: 999px;
-		padding: 0.15rem 0.5rem 0.15rem 0.65rem;
-		font-size: 0.8rem;
-	}
-
-	.tag-remove {
-		background: none;
-		border: none;
-		color: inherit;
-		cursor: pointer;
-		padding: 0;
-		display: flex;
-		align-items: center;
-		opacity: 0.6;
-	}
-
-	.tag-remove:hover {
-		opacity: 1;
-	}
-
 	.add-group {
 		display: flex;
 		align-items: center;
@@ -591,12 +460,51 @@
 		min-width: 0;
 	}
 
-	.entity-name {
+	.entity-fields {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		min-width: 0;
+	}
+
+	.entity-name-row {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	.entity-id {
 		flex-shrink: 0;
-		max-width: 60%;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
+		font-size: 0.7rem;
+		opacity: 0.5;
+		background: rgba(255, 255, 255, 0.08);
+		border-radius: 0.25rem;
+		padding: 0.1rem 0.3rem;
+	}
+
+	.entity-state-row {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	.on-label {
+		flex-shrink: 0;
+		font-size: 0.68rem;
+		opacity: 0.45;
+	}
+
+	.name-input {
+		flex: 1;
+		min-width: 60px;
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 0.35rem;
+		padding: 0.15rem 0.4rem;
+		color: inherit;
+		font-family: inherit;
+		font-size: 0.78rem;
 	}
 
 	.on-state-input {

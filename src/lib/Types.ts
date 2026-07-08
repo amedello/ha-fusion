@@ -199,6 +199,7 @@ export interface PowerSummaryGroup {
 export interface PowerSummaryEntity {
 	entity_id: string;
 	on_state?: string;
+	name?: string;
 }
 
 export interface PowerSummaryItem {
